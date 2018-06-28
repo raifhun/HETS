@@ -2,7 +2,9 @@ import h5py
 import numpy as np
 import array
 import tkinter as tk
+from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import simpledialog
 # initialize tkinter
 root = tk.Tk()
 root.withdraw()
@@ -140,7 +142,7 @@ def decay_extract(current_file):  # extracts the hdf5 data in a format to read o
         return local_data_formatted
 
 
-def write_to_file(total_data_entry, dat_file_final, file_list):  # writes the array that was built to an excel file
+def write_to_file(total_data_entry, dat_file_final):  # writes the array that was built to an excel file
     number_file = len(total_data_entry)
     max_len = 0
     print(number_file)
@@ -165,19 +167,15 @@ def write_to_file(total_data_entry, dat_file_final, file_list):  # writes the ar
 
 def main_extraction_loop():  # logic that runs the extraction, can be replaced with gui/improved program control logic
     # logic to collect files that will be extracted
-    x = False
+    continue_select = True
     file_list = []
-    while x == False:
+    while continue_select:
         root.attributes("-topmost", True)  # just ensures the popup takes focus
         file_list.append(h5py.File(filedialog.askopenfilename(title="Select a File for Extraction",
                                                               filetypes=(("hdf5 files", "*.hdf5"),
                                                                          ("all files", "*.*")))))
         root.attributes("-topmost", False)
-        continue_select = input("Would you like to continue adding files (y or n)?")
-        if continue_select == "y" or continue_select == "Y" or continue_select == "Yes":
-            x = False
-        else:
-            x = True
+        continue_select = messagebox.askyesno("Question", "Would you like to add more files?")
 
     # specify save location for .dat file with results from extraction
     root.attributes("-topmost", True)
@@ -187,7 +185,8 @@ def main_extraction_loop():  # logic that runs the extraction, can be replaced w
     dat_file_final = open(dat_file_path.name, 'w+')
 
     # specify which type of extraction this is
-    process_type = input("What process would you like? 1 - Spectrum, 2 - Decay, 3 - Specific Decay")
+    process_type = simpledialog.askinteger("Process_type", "What process would you like? 1 - Spectrum, 2 - Decay," 
+                                                           " 3 - Specific Decay")
     total_data_entry = []
 
     # determine the process type you want, sum of wavelength, decay characteristics,
@@ -198,22 +197,21 @@ def main_extraction_loop():  # logic that runs the extraction, can be replaced w
     if int(process_type) == 1:  # if process 1, runs spectrum extraction
         for file in file_list:
             total_data_entry.append(spectrum_extract(file))
-        write_to_file(total_data_entry, dat_file_final, file_list)
+        write_to_file(total_data_entry, dat_file_final)
         print("Files successfully Extracted")
 
     if int(process_type) == 2:  # if process 2, runs the decay extraction
         for file in file_list:
             total_data_entry.append(decay_extract(file))
-        write_to_file(total_data_entry, dat_file_final, file_list)
+        write_to_file(total_data_entry, dat_file_final)
         print("Files successfully Extracted")
     if int(process_type) == 3:  # if process 3, runs the decay extraction for specific wavelengths per group
-        wl_start = int(input("What wavelength would you like to start on?"))
-        wl_end = int(input("What wavelength would you like to stop on?"))
+        wl_start = int(simpledialog.askinteger("Wavelength Start", "What wavelength would you like to start on?"))
+        wl_end = int(simpledialog.askinteger("Wavelength End", "What wavelength would you like to stop on?"))
         for file in file_list:
             total_data_entry.append(specific_extract(file, wl_start, wl_end))
-        write_to_file(total_data_entry, dat_file_final, file_list)
+        write_to_file(total_data_entry, dat_file_final)
         print("Files successfully Extracted")
 
 
 main_extraction_loop()
-
